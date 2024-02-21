@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="join">
+	<!-- association : 1:1관계의 join명령을 처리하기 위해 사용된다. -->
+	<resultMap type="part01.dto.EmployeesDTO"
+		id="emp_dept_result" autoMapping="true">
+		<!-- <id column="employee_id" property="employee_id" 오토매핑 상태고 컬럼명, 변수명 
+			같으면 생략가능 /> result column = first_name" property="fist+name" /> <result column 
+			= "salary" property="salary"/> -->
+		<association property="dept"
+			javaType="part01.dto.DepartmentsDTO" autoMapping="true">
+			<!-- <id column = "department_id" property="department_id" /> <result 
+				column = "department_name" property = "department_name" /> -->
+
+
+		</association>
+
+	</resultMap>
+	<!-- 밑의 select의 결과값을 위의 resultmap값으로 정의할 거다.? -->
+
+	<select id="emp_dept" resultMap="emp_dept_result">
+		select e.employee_id, e.first_name, e.salary, e.hire_date, d.department_id,
+		d.department_name
+		from employees e, departments d
+		where e.department_id
+		= d.department_id
+		order by e.employee_id
+
+	</select>
+
+	<!-- collection: join에서 1대 N의 관계 -->
+	<resultMap type="part01.dto.DepartmentsDTO"
+		id="dept_emp_result">
+		<id column="department_id" property="department_id" />
+		<result column="department_name" property="department_name" />
+		<collection property="empList" javaType="java.util.List"
+			ofType="part01.dto.EmployeesDTO">
+			<id column = "department_id" property="department_id" /> 
+			<result column = "first_name" property = "first_name" /> 
+			<result column = "salary" property = "salary" />
+			<result column = "hire_date" property = "hire_date" />
+		</collection>
+
+	</resultMap>
+
+	<select id="dept_emp" resultMap="dept_emp_result">
+		SELECT d.department_id,
+		d.department_name, e.employee_id, e.first_name, e.salary, e.hire_date
+		FROM departments d, employees e
+		WHERE d.department_id = e.department_id
+	</select>
+
+</mapper>
+<!-- 쿼리문 잘 작성한 건지 궁금하면 mysql에서 select -->

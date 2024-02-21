@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mem">
+
+	<select id = "cnt" resultType="java.lang.Integer">
+	  SELECT count(*) FROM mem
+	</select>
+	
+	<select id = "all" resultType="part02.dto.MemDTO">
+	  SELECT * FROM mem  <!-- 파일 전체를 가져오는 거니까. count로 가져오면 부분적으로 가져오잖아 -->
+	  ORDER BY num  
+	</select>
+	
+	<!-- insert할때 null값을 허용할때는 #{컬럼명, jdbcType=VARCHAR}로 쓴다. 오류 뜨면 이렇게 써본다. -->
+	<insert id = "ins" parameterType="part02.dto.MemDTO" >
+	  INSERT INTO mem(name, age, loc)
+	  VALUES(#{name}, #{age}, #{loc})
+	</insert>
+	
+	<update id ="upt" parameterType="java.util.HashMap">
+        UPDATE mem
+        SET name = #{name}, age=#{age}, loc=#{loc}
+        WHERE num=#{num}
+	</update>
+	
+	<delete id="del" parameterType="int">
+	   DELETE FROM mem
+	   WHERE num=#{num}
+	</delete>
+	<!-- 
+	INSERT INTO 테이블명(컬럼1, 컬럼2, 컬럼3)
+    VALUES(값1, 값2, 값3), (값1, 값2, 값3), (값1, 값2, 값3) -->
+	<insert id="multiIns" parameterType="java.util.List"> 
+	   INSERT INTO mem(name, age, loc) VALUES
+	   <foreach collection = "list" item="element" index="no" separator=","> <!-- 값 받아올 변수 생성 -->
+	     (#{element.name}, #{element.age}, #{element.loc})
+	   </foreach>
+	   
+	</insert>
+	<!-- delete from mem where num in (10,30,40) -->
+	<delete id = "multiDel">
+	  DELETE FROM mem
+	  WHERE num IN(
+	  <foreach collection="array" item="element" separator = ",">
+	    #{element}
+	  </foreach>
+	  )
+	</delete>
+	
+	<!-- dynamic if(동적 쿼리) -->
+	<select id = "search" parameterType = "part02.dto.MemDTO" resultType = "part02.dto.MemDTO">
+	  SELECT * FROM mem
+	<!--  <where> <>에 들어있는건 mybatis문법이다 
+	  <if test = "name!=null">
+	      name LIKE '%' concat('%', #{name}, '%')
+	  </if>
+	  
+	  <if test = "age!=0">
+	      OR age > #{age}
+	  </if>
+	  </where> -->
+	  
+	  <trim prefix = "where" prefixOverrides="or|and">
+	    <if test = "name!=null">
+	      name LIKE concat('%', #{name}, '%') 
+	  </if>
+	  
+	  <if test = "age!=0">
+	      OR age > #{age}
+	  </if>
+	  </trim>
+	</select>
+	
+	<!-- 다중 update -->
+	<update id= "multiUpdate" parameterType = "part02.dto.MemDTO">
+	  UPDATE mem
+	  <set>
+	     <if test = "name!=null"> <!-- 조건 만족할 때 수행할 문장들이다. -->
+	        name = #{name},
+	     </if>
+	     
+	     <if test = "age!=0">
+	       age = #{age},
+	     </if>
+	     
+	     <if test = "loc!=null">
+	     loc = #{loc}
+	     </if>
+	  </set>
+	  WHERE num = #{num}
+	</update>
+	
+	<!-- choose 동적 sql (if~else) -->
+	<insert id = "insData" parameterType = "part02.dto.MemDTO">
+	  INSERT INTO mem(name, age, loc)
+	  VALUES(#{name}, #{age},
+	  <choose>
+	  <when test = "loc==null">
+	  'test'
+	  </when>
+	  <otherwise> <!-- else같은 것같다 -->
+	  #{loc}
+	  </otherwise>
+	  
+	  </choose>
+	  )
+	</insert>
+	
+		
+</mapper>
